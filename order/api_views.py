@@ -13,7 +13,7 @@ class OrderViewSet(ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = OrderFilter
 
-    @transaction.atomic
-    def create(self, request, *args, **kwargs):
-        print('Создание внутри транзакции')
-        return super().create(request, *args, **kwargs)
+    # @transaction.atomic
+    # def create(self, request, *args, **kwargs):
+    #     print('Создание внутри транзакции')
+    #     return super().create(request, *args, **kwargs)

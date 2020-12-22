@@ -1,6 +1,8 @@
 from django.db import transaction
 from rest_framework import serializers
-from .models import Order, Product
+from rest_framework.exceptions import ValidationError
+
+from .models import Order, Product, ProductOrderPosition
 
 
 class ProductOrderPositionSerializer(serializers.Serializer):
@@ -28,10 +30,23 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         print(attrs)
-
+        positions = attrs.get('positions')
+        if not positions:
+            raise ValidationError({'positions': 'Не указан список товаров'})
+        set_positions = set(position['product']["id"] for position in positions)
+        if len(positions) != len(set_positions):
+            raise ValidationError({'positions': 'Есть повторы продуктов'})
         return attrs
 
     @transaction.atomic
     def create(self, validated_data):
         print('Проверенно')
-        return super().create(validated_data)
+        positions = validated_data.pop('positions')
+        order = super().create(validated_data)
+        for position in positions:
+            ProductOrderPosition.objects.create(
+                product=position['product']['id'],
+                order=order,
+                quantity=position['quantity']
+            )
+        return order
